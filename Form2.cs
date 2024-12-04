@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -14,22 +14,23 @@ namespace BTVNBuoi4
 {
     public partial class Form2 : Form
     {
-        private Form1 _form1; // Tham chiếu đến Form1
-        private Employee _employee; // Nhân viên cần sửa (nếu có)
-       
+        // Sử dụng event để thông báo khi có thay đổi
+        public event Action<Employee> EmployeeAdded;
+        public event Action<Employee> EmployeeUpdated;
+
+        private Employee _employee;
+
         public Form2(Form1 form1, Employee employee = null)
         {
             InitializeComponent();
-            _form1 = form1;
             _employee = employee;
 
-            if (_employee != null)
+            if (_employee != null) // Chế độ chỉnh sửa
             {
-                // Hiển thị thông tin nhân viên nếu đang sửa
                 txtID.Text = _employee.Id;
+                txtID.Enabled = false; // Không cho phép chỉnh sửa ID
                 txtName.Text = _employee.Name;
                 txtSalary.Text = _employee.Salary.ToString();
-                txtID.Enabled = false; // Không cho phép sửa MSNV
             }
         }
 
@@ -40,25 +41,34 @@ namespace BTVNBuoi4
 
         private void btnDongy_Click(object sender, EventArgs e)
         {
-            if (_employee == null) // Trường hợp thêm mới
+            // Xác thực dữ liệu
+            if (string.IsNullOrWhiteSpace(txtName.Text) ||
+                !double.TryParse(txtSalary.Text, out double salary) || salary < 0)
             {
-                Employee newEmployee = new Employee
+                MessageBox.Show("Vui lòng nhập dữ liệu hợp lệ!", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            if (_employee == null) // Chế độ thêm mới
+            {
+                var newEmployee = new Employee
                 {
                     Id = txtID.Text,
                     Name = txtName.Text,
-                    Salary = double.Parse(txtSalary.Text)
+                    Salary = salary
                 };
 
-                _form1.employees.Add(newEmployee); // Thêm vào danh sách
+                EmployeeAdded?.Invoke(newEmployee); // Gửi sự kiện thêm
             }
-            else // Trường hợp sửa
+            else // Chế độ chỉnh sửa
             {
                 _employee.Name = txtName.Text;
-                _employee.Salary = double.Parse(txtSalary.Text);
+                _employee.Salary = salary;
+
+                EmployeeUpdated?.Invoke(_employee); // Gửi sự kiện chỉnh sửa
             }
 
-            _form1.RefreshGridView(); // Làm mới DataGridView
-            this.Close(); // Đóng Form2
+            this.Close();
         }
 
         private void btnBoqua_Click(object sender, EventArgs e)
