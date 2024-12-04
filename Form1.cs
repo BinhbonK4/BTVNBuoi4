@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -36,39 +36,43 @@ namespace BTVNBuoi4
 
         private void btnThem_Click(object sender, EventArgs e)
         {
-            Form2 form2 = new Form2(this);
+            var form2 = new Form2(this, null);
+            form2.EmployeeAdded += employee =>
+            {
+                employees.Add(employee);
+                RefreshGridView();
+            };
             form2.ShowDialog();
         }
 
         private void btnSua_Click(object sender, EventArgs e)
         {
-            if (dtgEmployees.SelectedRows.Count > 0)
+            if (dtgEmployees.SelectedRows.Count == 0)
             {
-                // Lấy nhân viên được chọn
-                int index = dtgEmployees.SelectedRows[0].Index;
-                Employee selectedEmployee = employees[index];
+                MessageBox.Show("Vui lòng chọn nhân viên cần sửa!", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
 
-                Form2 form2 = new Form2(this, selectedEmployee);
-                form2.ShowDialog(); // Hiển thị Form2 dưới dạng modal
-            }
-            else
+            var selectedEmployee = (Employee)dtgEmployees.SelectedRows[0].DataBoundItem;
+            var form2 = new Form2(this, selectedEmployee);
+            form2.EmployeeUpdated += employee =>
             {
-                MessageBox.Show("Vui lòng chọn nhân viên cần sửa!", "Thông báo");
-            }
+                RefreshGridView(); // Cập nhật danh sách
+            };
+            form2.ShowDialog();
         }
 
         private void btnXoa_Click(object sender, EventArgs e)
         {
-            if (dtgEmployees.SelectedRows.Count > 0)
+            if (dtgEmployees.SelectedRows.Count == 0)
             {
-                int index = dtgEmployees.SelectedRows[0].Index;
-                employees.RemoveAt(index);
-                RefreshGridView();
+                MessageBox.Show("Vui lòng chọn nhân viên cần xóa!", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
             }
-            else
-            {
-                MessageBox.Show("Vui lòng chọn nhân viên cần xóa!", "Thông báo");
-            }
+
+            var selectedEmployee = (Employee)dtgEmployees.SelectedRows[0].DataBoundItem;
+            employees.Remove(selectedEmployee);
+            RefreshGridView();
         }
 
         private void btnDong_Click(object sender, EventArgs e)
